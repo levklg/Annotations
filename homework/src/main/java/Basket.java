@@ -44,11 +44,13 @@ public class Basket {
     }
 
     public  void showBasket(){
-        if(this.basketMap == null || this.basketMap.isEmpty()) System.out.println(" Карзина пуста");
+        if(this.basketMap == null || this.basketMap.isEmpty()) System.out.println("Basket is empty");
         else {
+            System.out.print("In the basket: ");
             for (Map.Entry<String, Integer> entry : basketMap.entrySet()) {
-                System.out.println(entry.getKey() + " - " + entry.getValue());
+                System.out.print(entry.getKey() + " - " + entry.getValue() + " ");
             }
+            System.out.println("");
         }
     }
 
