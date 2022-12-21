@@ -15,36 +15,40 @@ public class BasketTest {
     @Before
     void testBefore(){
         basket = new Basket(basketMap);
-        System.out.println("Befor_test " + this.hashCode());
+        System.out.println("Befor_1 " );
     }
 
     @Test
-    void test1(){
+    void test(){
         basket.add("apple",3);
-        System.out.println("test1 " + this.hashCode());
-    }
-    @Test
-    void test2(){
-        basket.add("pear",4);
-        System.out.println("test2 " + this.hashCode());
+        System.out.println("test_1 " );
     }
 
-    @Test
-    void test3(){
-        basket.add("orange",2);
-        System.out.println("test3 " + this.hashCode());
-    }
     @After
     void  testAfter(){
         basket.showBasket();
-        System.out.println("After" + this.hashCode());
+        System.out.println("After_1");
+    }
+
+    @Before
+    void testBefore2(){
+        basket = new Basket(basketMap);
+        System.out.println("Befor_2 ");
+    }
+
+    @Test
+    void test2(){
+        basket.add("apple",3);
+        System.out.println("test_2 ");
     }
 
     @After
     void  testAfter2(){
-        basket.cleanBasket();
-        System.out.println("After2 " + this.hashCode());
+        basket.showBasket();
+        System.out.println("After_2");
     }
+
+
 
 
 
