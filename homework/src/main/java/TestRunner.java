@@ -6,82 +6,76 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class TestRunner {
-    static int notpassed = 0;
-    static int passed = 0;
+    private static int notpassed = 0;
+    private static int passed = 0;
 
+    public static void run(Class<?> clazz) {
+        List<Method> beforeMethods = getAnnotatedMethods(clazz, Before.class);
+        List<Method> testMethods = getAnnotatedMethods(clazz, Test.class);
+        List<Method> afterMethods = getAnnotatedMethods(clazz, After.class);
 
-    public static void run(Class clazz) {
-
-
-        try {
-            Method[] methods = clazz.getDeclaredMethods();
-
-            var beforeList = Arrays.stream(methods).filter(method -> method.isAnnotationPresent(Before.class)).collect(Collectors.toList());
-            var testeList = Arrays.stream(methods).filter(method -> method.isAnnotationPresent(Test.class)).collect(Collectors.toList());
-            var afterList = Arrays.stream(methods).filter(method -> method.isAnnotationPresent(After.class)).collect(Collectors.toList());
-
-            List<Method> methodList = new ArrayList<>(Arrays.stream(clazz.getDeclaredMethods()).toList());
-
-            Constructor<?> constructor = clazz.getDeclaredConstructor();
-
-            for (int i = 0; i < beforeList.size(); i++) {
-                Object object = constructor.newInstance();
-                runAnnotation(Before.class, beforeList.get(i), object);
-                runAnnotation(Test.class, testeList.get(i), object);
-                runAnnotation(After.class, afterList.get(i), object);
+        for (Method testMethod : testMethods) {
+            Object testInstance = createTestInstance(clazz);
+            if (testInstance != null) {
+                executeMethods(beforeMethods, testInstance);
+                executeTestMethod(testMethod, testInstance);
+                executeMethods(afterMethods, testInstance);
             }
-
-
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
         }
 
+        printTestResults();
+    }
+
+    private static List<Method> getAnnotatedMethods(Class<?> clazz, Class<?> annotation) {
+        return Arrays.stream(clazz.getDeclaredMethods())
+                .filter(method -> method.isAnnotationPresent((Class<? extends Annotation>) annotation))
+                .collect(Collectors.toList());
+    }
+
+    private static Object createTestInstance(Class<?> clazz) {
+        try {
+            Constructor<?> constructor = clazz.getDeclaredConstructor();
+            return constructor.newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static void executeMethods(List<Method> methods, Object testInstance) {
+        for (Method method : methods) {
+            runMethod(method, testInstance);
+        }
+    }
+
+    private static void executeTestMethod(Method testMethod, Object testInstance) {
+        boolean result = runMethod(testMethod, testInstance);
+        if (result) {
+            System.out.println(testMethod.getName() + " - Passed");
+            passed++;
+        } else {
+            System.out.println(testMethod.getName() + " - Not Passed");
+            notpassed++;
+        }
+    }
+
+    private static boolean runMethod(Method method, Object testInstance) {
+        try {
+            method.setAccessible(true);
+            method.invoke(testInstance);
+            return true;
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            return false;
+        }
+    }
+
+    private static void printTestResults() {
         System.out.println("Number of tests - " + (passed + notpassed) + " : Passed test - " + passed
                 + ", Not Passed test - " + notpassed);
-
     }
-
-    private static boolean runMeyhod(Method method, Object object) {
-        boolean result = false;
-        if (object != null) {
-            method.setAccessible(true);
-            result = true;
-            try {
-                method.invoke(object);
-            } catch (IllegalAccessException e) {
-                result = false;
-
-            } catch (InvocationTargetException e) {
-                result = false;
-
-            }
-        }
-        return result;
-    }
-
-    private static void runAnnotation(Class<?> annotation, Method method, Object object) {
-
-        if (TestRunner.runMeyhod(method, object)) {
-            System.out.println(method.getName() + " - Passed");
-            if (annotation == Test.class) passed++;
-        } else {
-            System.out.println(method.getName() + " - Not Passed");
-            if (annotation == Test.class) notpassed++;
-        }
-
-    }
-
 }
